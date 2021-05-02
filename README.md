@@ -15,22 +15,22 @@ A Nginx config file consists of contexts and directives. A directive is just a s
 Typically, when talking about a Nginx configuration, we don't need to modify the complete configuration, but only the `server` directive. This part will be embedded into a larger config file by default.
 
 ```nginx
-server {  // Create a new virtual server for Kirby
+server {                      // Create a new virtual server for Kirby
   index index.php index.html; // If no specific file is requested, try these files
-  server_name localhost; // This needs to be adjusted to your domain name
+  server_name localhost;      // This needs to be adjusted to your domain name
   error_log /var/log/nginx/error.log;
   access_log /var/log/nginx/access.log;
-  root /usr/share/nginx/html;
+  root /usr/share/nginx/html; // This is where you need to put your files
 
   location / {
     try_files $uri $uri/ /index.php$is_args$args;
   }
 
-  location ~* \.php$ {
-    try_files $uri =404;
-    fastcgi_pass php:9000;
-    fastcgi_index index.php;
-    include fastcgi.conf;
+  location ~* \.php$ {.                          // Configuration for PHP files
+    try_files $uri =404;                         // Important for security reasons
+    fastcgi_pass php:9000;                       // Handover to PHP
+    fastcgi_index index.php;                     
+    include fastcgi.conf;                        // This will make sure, that the $SERVER variable in PHP is correctly set, which Kirby uses a lot
     fastcgi_split_path_info ^(.+\.php)(/.+)$;
     fastcgi_param PATH_INFO $fastcgi_path_info;
     fastcgi_param SERVER_PORT 8080;
