@@ -11,19 +11,20 @@ One of the best arguments for using Apache is one of its convenience features: I
 But this convenience comes at a cost: speed. All these `.htaccess` files have to be read and interpreted at every single request. So, because Nginx does not support `.htaccess` files [for performance reasons](https://www.nginx.com/resources/wiki/start/topics/examples/likeapache-htaccess/), it needs to be configured through a single, global config file. Most of the time, the config file also needs to be adjusted to the very specific setup. Where Apache uses modules to include PHP, Nginx also does this in its global config file. This means, there is not a single config file that works out of the box, which could be shipped with Kirby. So the process of configuring Nginx seems a little more intimidating to beginners – however it's really not that difficult and requires only about 20 lines of configuration to get Kirby running on Nginx.
 
 ## Contexts and Directives
-Generally speaking, a Nginx config file consists of contexts and directives. A directive is just a special keyword, followed by one or multiple values (e.g. `server_name localhost`). A context is a group and a scope for these directives (e.g. `server {...}`).
+Generally speaking, a Nginx config file consists of contexts and directives. A directive is just a special keyword, followed by one or multiple values (e.g. `server_name localhost`). A context is a group and a scope for these directives (e.g. `server {...}`). The order of directives does not matter.
 
 Typically, when talking about a Nginx configuration, we don't need to modify the complete configuration or start from scratch, because Nginx comes with a very reasonable default config. We only only need to create a new `server` context for our Kirby page. This part will be autmatically embedded into a larger config file by default, which we don't need to deal with at all.
 
 So, let's go look at a typical config file for a Kirby setup line by line:
 
 ```nginx
-server {                      // Create a new virtual server for Kirby
-  index index.php index.html; // If no specific file is requested, try these files
-  server_name localhost;      // This needs to be adjusted to your domain name
+server {
+  listen 8080;
+  index index.php index.html;
+  server_name localhost;
   error_log /var/log/nginx/error.log;
   access_log /var/log/nginx/access.log;
-  root /usr/share/nginx/html; // This is where you need to put your files
+  root /usr/share/nginx/html;
 
   location / {
     try_files $uri $uri/ /index.php$is_args$args;
@@ -45,10 +46,15 @@ server {                      // Create a new virtual server for Kirby
 
 ```
 server {
+  listen 80;
+```
+With the server context, we're creating a new virtual server for our Kirby page, which we're going to configure with all the following directives, which are indented by one level. With the `listen` directive, we're telling Nginx, on which port it should listen. This directive is optional – if you omit it, Nginx will listen on the default port 80.
+
+```
   index index.php index.html;
 ```
 
-With the server context, we're creating a new virtual server for our Kirby page, which we're going to configure with all the following directives, which are indented by one level. The `index` directive contains the names of files, which Nginx will try to serve, if the given request path does not match a file in the directory. Typically we want the PHP file to have a higher priority than the HTML file.
+The `index` directive contains the names of files, which Nginx will try to serve, if the given request path does not match a file in the directory. Typically we want the PHP file to have a higher priority than the HTML file.
 
 ```
   server_name localhost;
@@ -56,3 +62,16 @@ With the server context, we're creating a new virtual server for our Kirby page,
 
 The `server_name` directive tells Nginx, which requests it should accept for the given virtual server. This needs to be adjusted to your setup. If you're running Nginx locally, your probably want this to be `localhost` and if you're running this on the web, it should contain your domain name, e.g. `server_name www.mykirbysite.com`. You can also put down multiple server names, for example with `www` and without (e.g. `server_name www.mykirbysite.com mykirbysite.com`).
 
+
+```
+  error_log /var/log/nginx/error.log;
+  access_log /var/log/nginx/access.log;
+```
+These two `*_log` directives tell Nginx where to put the error log and the access log in your file system. If you omit this directive, they will be at Nginx/log.
+
+
+```
+   root /usr/share/nginx/html;
+```
+
+This is a very important directive, as it tells Nginx where your web root is. The files in the given directory will be served by Nginx. This should typically be the base folder of your Kirby project folder, or you should copy/extract the content of the Kirby repor/ZIP file to this location.
