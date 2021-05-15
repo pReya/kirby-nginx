@@ -22,19 +22,17 @@ server {
   listen 8080;
   index index.php index.html;
   server_name localhost;
-  error_log /var/log/nginx/error.log;
-  access_log /var/log/nginx/access.log;
   root /usr/share/nginx/html;
 
   location / {
     try_files $uri $uri/ /index.php$is_args$args;
   }
 
-  location ~* \.php$ {.                          // Configuration for PHP files
-    try_files $uri =404;                         // Important for security reasons
-    fastcgi_pass php:9000;                       // Handover to PHP
-    fastcgi_index index.php;                     
-    include fastcgi.conf;                        // This will make sure, that the $SERVER variable in PHP is correctly set, which Kirby uses a lot
+  location ~* \.php$ {
+    try_files $uri =404;
+    fastcgi_pass php:9000;
+    fastcgi_index index.php;
+    include fastcgi.conf;
     fastcgi_split_path_info ^(.+\.php)(/.+)$;
     fastcgi_param PATH_INFO $fastcgi_path_info;
     fastcgi_param SERVER_PORT 8080;
@@ -61,13 +59,6 @@ The `index` directive contains the names of files, which Nginx will try to serve
 ```
 
 The `server_name` directive tells Nginx, which requests it should accept for the given virtual server. This needs to be adjusted to your setup. If you're running Nginx locally, your probably want this to be `localhost` and if you're running it on the web, it should contain your domain name, e.g. `server_name www.mykirbysite.com`. You can also put down multiple server names, for example with `www` and without (e.g. `server_name www.mykirbysite.com mykirbysite.com`).
-
-
-```
-  error_log /var/log/nginx/error.log;
-  access_log /var/log/nginx/access.log;
-```
-These two `*_log` directives tell Nginx where to put the error log and the access log in your file system. The error log is a very good place to debug your problems, if something does not work as aspected. If you omit this directive, they will be put in a `logs` folder located next to your nginx executable.
 
 
 ```
