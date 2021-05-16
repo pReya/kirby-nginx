@@ -90,3 +90,12 @@ The following line `try_files $uri =404;` is very important, and often missing i
 ```
 
 This is the actual handover to the PHP interpreter. The `fastcgi_pass` takes the IP or unix socket to a PHP FPM process. So this settings depends on your specific setup. If you're using docker, you can just put down the name of your FPM container. If you're running PHP FPM on the same system. you can use localhost followed by the port number. Including `fastcgi.conf` will properly set some global PHP variables like `SCRIPT_NAME` and others.
+
+
+```
+    fastcgi_split_path_info ^(.+\.php)(/.+)$;
+    fastcgi_param PATH_INFO $fastcgi_path_info;
+    fastcgi_param SERVER_PORT 8080;
+```
+
+Including `fasctgi.conf` gave us a good set of default fastcgi parameters. Now there's only three of them, that we need to set manually starting with `fastcgi_split_path_info`. This directive needs to contain a regular expression with two capture groups. The first group will become the `$fastcgi_script_name` variable, and the second capture group will become `$fastcgi_path_info`. We're only interested in the second variable, which we'll use in the next line to set the `PATH_INFO` variable correctly. The last line is only necessary, if your Nginx is running on a different port, than the port that is really exposed (e.g. you run Nginx in a Docker container, where it has an internal Port 80, but the port is mapped to 8080 on the host). 
