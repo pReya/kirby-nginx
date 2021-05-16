@@ -49,20 +49,20 @@ With the server context, we're creating a new virtual server for our Kirby page,
   index index.php index.html;
 ```
 
-The `index` directive contains the names of files, which Nginx will try to serve, if the given request path does not directly match a file in the web root. Typically we want the `index.php` file to have a higher priority than the `index.html` file.
+The [`index` directive](http://nginx.org/en/docs/http/ngx_http_index_module.html) contains the names of files, which Nginx will try to serve, if the given request path does not directly match a file in the web root. Typically we want the `index.php` file to have a higher priority than the `index.html` file.
 
 ```
   server_name localhost;
 ```
 
-The `server_name` directive tells Nginx, which requests it should accept for the given virtual server. This needs to be adjusted to your setup. If you're running Nginx locally, your probably want this to be `localhost` and if you're running it on the web, it should contain your domain name, e.g. `server_name www.mykirbysite.com`. You can also put down multiple server names, for example with and without `www` (`server_name www.mykirbysite.com mykirbysite.com;`). You can also use any invalid `server_name` like `_` to create a "catch-all" server, which will accept all connections (you should not do this for security reasons).
+The [`server_name` directive](http://nginx.org/en/docs/http/ngx_http_core_module.html#server_name) tells Nginx, which requests it should accept for the given virtual server. This needs to be adjusted to your setup. If you're running Nginx locally, your probably want this to be `localhost` and if you're running it on the web, it should contain your domain name, e.g. `server_name www.mykirbysite.com`. You can also put down multiple server names, for example with and without `www` (`server_name www.mykirbysite.com mykirbysite.com;`). You can also use any invalid `server_name` like `_` to create a "catch-all" server, which will accept all connections (you should not do this for security reasons).
 
 
 ```
    root /usr/share/nginx/html;
 ```
 
-This is a very important directive, as it tells Nginx where your web root is located. The files in the given directory will be served by Nginx. This should typically be the base folder of your Kirby project folder, or you should copy/extract the content of the Kirby repo/ZIP file to this location.
+This is a very [important directive](http://nginx.org/en/docs/http/ngx_http_core_module.html#root), as it tells Nginx where your web root is located. The files in the given directory will be served by Nginx. This should typically be the base folder of your Kirby project folder, or you should copy/extract the content of the Kirby repo/ZIP file to this location.
 
 ```
   location / {
@@ -78,7 +78,7 @@ This block is extremly important, and probably the most "unique" part about this
     try_files $uri =404;
 ```
 
-This `location` block configures the communication between Nginx and PHP. The `~*` after the location keyword is a modifier, to make the following regular expression case insensitive (this means, that `.php` and `.PHP` files will both be handled by this block. Let's look at the regular expression `\.php$` in more detail:
+This [`location` block](http://nginx.org/en/docs/http/ngx_http_core_module.html#location) configures the communication between Nginx and PHP. The `~*` after the location keyword is a modifier, to make the following regular expression case insensitive (this means, that `.php` and `.PHP` files will both be handled by this block. Let's look at the regular expression `\.php$` in more detail:
 - `\.` the backslash is an escape sequence, so the following character (a period) will be treated as an actual period, and not as a placeholder (which a period normally means)
 - `php$` the dollar sign at the end of php means, that php needs to be at the end of a path (e.g. it will match `/my/folder/index.php` but not `/my/folder/index.php/morestuff`
 The following line `try_files $uri =404;` is very important, and often missing in Nginx tutorials. It makes sure, that only existing files will be interpreted by PHP. If this is missing, PHP will do some crazy stuff to find a file matching this request, which may result in security problems.
