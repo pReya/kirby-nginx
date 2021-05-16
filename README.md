@@ -29,7 +29,7 @@ server {
   location ~* \.php$ {
     try_files $uri =404;
     fastcgi_pass php:9000;
-    fastcgi_index index.php;
+    #fastcgi_index index.php;
     include fastcgi.conf;
     fastcgi_split_path_info ^(.+\.php)(/.+)$;
     fastcgi_param PATH_INFO $fastcgi_path_info;
@@ -79,4 +79,7 @@ This block is extremly important, and probably the most "unique" part about runn
     try_files $uri =404;
 ```
 
-This `location` block configures the communication between Nginx and PHP.
+This `location` block configures the communication between Nginx and PHP. The `~*` after the location keyword is a modifier, to make the following regular expression case insensitive (this means, that `.php` and `.PHP` files will both be handled by this block. Let's look at the regular expression `\.php$` in more detail:
+- `\.` the backslash is an escape sequence, so the following character (a period) will be treated as an actual period, and not as a placeholder (which a period normally means)
+- `php$` the dollar sign at the end of php means, that php needs to be at the end of a path (e.g. it will match `/my/folder/index.php` but not `/my/folder/index.php/morestuff`
+The following line `try_files $uri =404;` is very important, and often missing in Nginx tutorials. It makes sure, that only existing files will be interpreted by PHP. If this is missing, PHP will do some crazy stuff to find a file matching this request, which may result in security problems.
