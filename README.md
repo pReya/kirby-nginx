@@ -1,6 +1,6 @@
 # Running Kirby on Nginx
 
-In its requirements, Kirby states that it is able to run on many different web servers. However in reality it seems that most of the time it is used on Apache servers. Historically, Apache is pretty common among shared webhosting providers where many people host their Kirby sites. It's also very popular as a local development server because of tools like LAMP/MAMP/WAMP which make it very easy to install Apache and PHP on your local computer. Even though Nginx has been around for more than 15 years and is widely considered to be more modern and more performant than Apache, it's often seen as more complicated or not as beginner-friendly.
+In its [requirements](https://getkirby.com/docs/guide/quickstart), Kirby states that it is able to run on many different web servers. However in reality it seems that most of the time it is used on Apache servers. Historically, Apache is pretty common among shared webhosting providers where many people host their Kirby sites. It's also very popular as a local development server because of [tools like LAMP/MAMP/WAMP](https://getkirby.com/docs/cookbook/setup/development-environment) which make it very easy to install Apache and PHP on your local computer. Even though Nginx has been around for more than 15 years and is widely considered to be more modern and more performant than Apache, it's often seen as more complicated or not as beginner-friendly.
 
 ## Nginx does not support `.htaccess`
 
@@ -13,13 +13,13 @@ Generally speaking, a Nginx config file consists of contexts and directives. A d
 
 Typically, when talking about a Nginx configuration, we don't need to modify the complete configuration or start completely from scratch, because Nginx comes with a very reasonable default config. We only need to create a new `server` context (which represents a virtual server) for our Kirby page. This part will be automatically embedded into a larger config file by default, which we don't need to touch at all.
 
-So, let's go look at a good boilerplate config for a Kirby setup:
+So, let's look at a good boilerplate config for a Kirby setup. Feel free to copy this and skip the rest of this article, or keep going if you're interested in the explanation, why certain directives are needed or not:
 
 ```nginx
 server {
   listen 8080; # Can be omitted if Nginx runs on Port 80
   index index.php index.html;
-  server_name localhost; # Adjust to your setup
+  server_name localhost; # Adjust to your domain setup
   root /usr/share/nginx/html; # Adjust to your setup
 
   location / {
@@ -28,7 +28,7 @@ server {
 
   location ~* \.php$ {
     try_files $uri =404;
-    fastcgi_pass php:9000;
+    fastcgi_pass php:9000; # Adjust to your setup
     include fastcgi.conf;
     fastcgi_split_path_info ^(.+\.php)(/.+)$;
     fastcgi_param PATH_INFO $fastcgi_path_info;
@@ -49,13 +49,13 @@ With the server context, we're creating a new virtual server for our Kirby page,
   index index.php index.html;
 ```
 
-The `index` directive contains the names of files, which Nginx will try to serve, if the given request path does not directly match a file in the directory. Typically we want the `index.php` file to have a higher priority than the `index.html` file.
+The `index` directive contains the names of files, which Nginx will try to serve, if the given request path does not directly match a file in the web root. Typically we want the `index.php` file to have a higher priority than the `index.html` file.
 
 ```
   server_name localhost;
 ```
 
-The `server_name` directive tells Nginx, which requests it should accept for the given virtual server. This needs to be adjusted to your setup. If you're running Nginx locally, your probably want this to be `localhost` and if you're running it on the web, it should contain your domain name, e.g. `server_name www.mykirbysite.com`. You can also put down multiple server names, for example with `www` and without (e.g. `server_name www.mykirbysite.com mykirbysite.com`).
+The `server_name` directive tells Nginx, which requests it should accept for the given virtual server. This needs to be adjusted to your setup. If you're running Nginx locally, your probably want this to be `localhost` and if you're running it on the web, it should contain your domain name, e.g. `server_name www.mykirbysite.com`. You can also put down multiple server names, for example with and without `www` (`server_name www.mykirbysite.com mykirbysite.com;`). You can also use any invalid `server_name` like `_` to create a "catch-all" server, which will accept all connections (you should not do this for security reasons).
 
 
 ```
@@ -70,7 +70,7 @@ This is a very important directive, as it tells Nginx where your web root is loc
   }
 ```
 
-This block is extremly important, and probably the most "unique" part about runnig Kirby on Nginx. Without this block, links and images in Kirby will nowt work correctly. Kirby uses a so called "front controller", which means, that all requests to the Kirby site need to go through a single entrance point (which is `index.php`). Kirby will internally forward/handle the requests to the proper place. So, even if you're just trying to request an image somewhere in your content folder, the request still needs to go through `index.php` and cannot be answered by the webserver directly (e.g. Kirby needs to decide, whether to generate a Thumbnail or not). The `try_files` directive tells Nginx where, what files it should serve, if there is no direct match for the given path. By adding `/index.php$is_args$args` to this list, we make sure that every request gets to the Kirby front controller.
+This block is extremly important, and probably the most "unique" part about this Nginx config. Without this block, links and images in Kirby will not work properly. Kirby uses a so called "front controller", which means, that all requests to the Kirby site need to go through a single entrance point (which is `index.php`). Kirby will internally forward/handle the requests to the proper place. If you're trying to request a nested site somewhere deep in your content folder (like `photography/trees`), it does not exist on the file system, so the request needs to go to `index.php`. The `try_files` directive tells Nginx what files it should serve, if there is no direct match for the given path. By adding `/index.php$is_args$args` to this list, we make sure that every request gets to the Kirby front controller, if there is no corresponding file on the file system.
 
 
 ```
