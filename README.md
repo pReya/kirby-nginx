@@ -19,8 +19,8 @@ So, let's go look at a good boilerplate config for a Kirby setup:
 server {
   listen 8080; # Can be omitted if Nginx runs on Port 80
   index index.php index.html;
-  server_name localhost;
-  root /usr/share/nginx/html;
+  server_name localhost; # Adjust to your setup
+  root /usr/share/nginx/html; # Adjust to your setup
 
   location / {
     try_files $uri $uri/ /index.php$is_args$args;
