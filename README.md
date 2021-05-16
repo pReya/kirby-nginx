@@ -29,7 +29,6 @@ server {
   location ~* \.php$ {
     try_files $uri =404;
     fastcgi_pass php:9000;
-    #fastcgi_index index.php;
     include fastcgi.conf;
     fastcgi_split_path_info ^(.+\.php)(/.+)$;
     fastcgi_param PATH_INFO $fastcgi_path_info;
@@ -83,3 +82,11 @@ This `location` block configures the communication between Nginx and PHP. The `~
 - `\.` the backslash is an escape sequence, so the following character (a period) will be treated as an actual period, and not as a placeholder (which a period normally means)
 - `php$` the dollar sign at the end of php means, that php needs to be at the end of a path (e.g. it will match `/my/folder/index.php` but not `/my/folder/index.php/morestuff`
 The following line `try_files $uri =404;` is very important, and often missing in Nginx tutorials. It makes sure, that only existing files will be interpreted by PHP. If this is missing, PHP will do some crazy stuff to find a file matching this request, which may result in security problems.
+
+
+```
+    fastcgi_pass php:9000;
+    include fastcgi.conf;
+```
+
+This is the actual handover to the PHP interpreter. The `fastcgi_pass` takes the IP or unix socket to a PHP FPM process. So this settings depends on your specific setup. If you're using docker, you can just put down the name of your FPM container. If you're running PHP FPM on the same system. you can use localhost followed by the port number. Including `fastcgi.conf` will properly set some global PHP variables like `SCRIPT_NAME` and others.
