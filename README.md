@@ -6,18 +6,18 @@ In its requirements, Kirby states that it is able to run on many different web s
 
 One of the best arguments for using Apache is one of its convenience features: It can be configured through files (called `.htaccess`) within your projects' folders. So it's no wonder, Kirby ships with a `.htaccess` file which makes sure, that it should run flawlessly whenever Kirby is dropped into an Apache web root.
 
-But this convenience comes at a cost: speed. All these `.htaccess` files have to be read and interpreted at every single request. So, because Nginx does not support `.htaccess` files [for performance reasons](https://www.nginx.com/resources/wiki/start/topics/examples/likeapache-htaccess/), it needs to be configured through a single, global config file. Most of the time, the config file also needs to be adjusted to the very specific server setup. Where Apache uses modules to include PHP, Nginx also does this in its global config file. This means, there is not a single config file that works out of the box, which could be shipped with Kirby. So the process of configuring Nginx seems a little more intimidating to beginners – however it's really not that difficult and requires only about 20 lines of configuration to get Kirby running on Nginx.
+But this convenience comes at a cost: speed. All these `.htaccess` files have to be read and interpreted at every single request. So, because Nginx does not support `.htaccess` files [for performance reasons](https://www.nginx.com/resources/wiki/start/topics/examples/likeapache-htaccess/), it needs to be configured through a single, global config file. Most of the time, the config file also needs to be adjusted to the very specific server setup. Where Apache uses modules to include PHP, Nginx also does this in its global config file. This means, there is not a single config file that works out of the box, which could be shipped with Kirby. So the process of configuring Nginx seems a little more intimidating to beginners – however it's really not that difficult and requires only about 20 lines of configuration to get Kirby (or most other PHP applications) running on Nginx.
 
 ## Contexts and Directives
-Generally speaking, a Nginx config file consists of contexts and directives. A directive is just a special keyword, followed by one or multiple values (e.g. `server_name localhost`) and ends with semicolon. A context is a group and a scope for these directives (e.g. `server {...}`). The order of directives does not matter.
+Generally speaking, a Nginx config file consists of contexts and directives. A directive is just a special keyword, followed by one or multiple values (e.g. `server_name localhost;`) and ends with a semicolon. A context is a group and a scope for these directives (e.g. `server {...}`). The order of directives can matter in some cases, so try to stick to the example, where possible.
 
-Typically, when talking about a Nginx configuration, we don't need to modify the complete configuration or start completely from scratch, because Nginx comes with a very reasonable default config. We only only need to create a new `server` context for our Kirby page. This part will be autmatically embedded into a larger config file by default, which we don't need to deal with at all.
+Typically, when talking about a Nginx configuration, we don't need to modify the complete configuration or start completely from scratch, because Nginx comes with a very reasonable default config. We only need to create a new `server` context (which represents a virtual server) for our Kirby page. This part will be automatically embedded into a larger config file by default, which we don't need to touch at all.
 
-So, let's go look at a typical server block for a Kirby setup line by line:
+So, let's go look at a good boilerplate config for a Kirby setup:
 
 ```nginx
 server {
-  listen 8080;
+  listen 8080; # Can be omitted if Nginx runs on Port 80
   index index.php index.html;
   server_name localhost;
   root /usr/share/nginx/html;
@@ -32,7 +32,7 @@ server {
     include fastcgi.conf;
     fastcgi_split_path_info ^(.+\.php)(/.+)$;
     fastcgi_param PATH_INFO $fastcgi_path_info;
-    fastcgi_param SERVER_PORT 8080;
+    fastcgi_param SERVER_PORT 8080; # Only needed if external port is different from the listen port
   }
 }
 ```
