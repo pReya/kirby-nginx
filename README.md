@@ -1,15 +1,16 @@
 # Running Kirby on Nginx
 
-In its [requirements](https://getkirby.com/docs/guide/quickstart), Kirby states that it is able to run on many different web servers. However in reality it seems that most of the time it is used on Apache servers. Historically, Apache is pretty common among shared webhosting providers where many people host their Kirby sites. It's also very popular as a local development server because of [tools like LAMP/MAMP/WAMP](https://getkirby.com/docs/cookbook/setup/development-environment) which make it very easy to install Apache and PHP on your local computer. Even though Nginx has been around for more than 15 years and is widely considered to be more modern and more performant than Apache, it's often seen as more complicated or not as beginner-friendly.
+In its [requirements](https://getkirby.com/docs/guide/quickstart), Kirby states that it is able to run on many different web servers. However in reality it seems that most of the time it is used on Apache servers. Historically, Apache is pretty common among shared webhosting providers where many people host their Kirby sites. It's also very popular as a local development server because of [tools like LAMP/MAMP/WAMP](https://getkirby.com/docs/cookbook/setup/development-environment) which make it very easy to install Apache and PHP on your local computer. Even though Nginx has been around for more than 15 years and is widely considered to be more modern and more performant than Apache, it's often still seen as more complicated or not as beginner-friendly.
 
 ## Nginx does not support `.htaccess`
 
 One of the best arguments for using Apache is one of its convenience features: It can be configured through files (called `.htaccess`) within your projects' folders. So it's no wonder, Kirby ships with a `.htaccess` file which makes sure, that it should run flawlessly whenever Kirby is dropped into an Apache web root.
 
-But this convenience comes at a cost: speed. All these `.htaccess` files have to be read and interpreted at every single request. So, because Nginx does not support `.htaccess` files [for performance reasons](https://www.nginx.com/resources/wiki/start/topics/examples/likeapache-htaccess/), it needs to be configured through a single, global config file. Most of the time, the config file also needs to be adjusted to the very specific server setup. Where Apache uses modules to include PHP, Nginx also does this in its global config file. This means, there is not a single config file that works out of the box, which could be shipped with Kirby. So the process of configuring Nginx seems a little more intimidating to beginners – however it's really not that difficult and requires only about 20 lines of configuration to get Kirby (or most other PHP applications) running on Nginx.
+But this convenience comes at a cost: speed. All these `.htaccess` files have to be read and interpreted at every single request. That's why Nginx does not support `.htaccess` files [for performance reasons](https://www.nginx.com/resources/wiki/start/topics/examples/likeapache-htaccess/).
+
+Instead, it needs to be configured through a single, global config file. Most of the time, the config file also needs to be adjusted to the very specific server setup and operating system. Where Apache uses modules to include PHP, Nginx also does this in its global config file. This means, there is not a single config file that works out of the box, which could be shipped with Kirby. So the process of configuring Nginx might seem a little bit more intimidating to beginners – however it's really not that difficult and requires only about 20 lines of configuration to get Kirby (or most other PHP applications) running on Nginx.
 
 The main config file for Nginx is typically found in the main Nginx folder and called `nginx/nginx.conf`. We don't need to edit this file, but it's still very interesting to look at. Towards the end it will typically include files from `nginx/conf.d/*.conf`. So to get started with your Kirby page, you can either create a new file like `nginx/conf.d/kirby.conf` or just edit the default file `nginx/conf.d/default.conf`.
-
 
 
 ## Contexts and Directives
@@ -90,16 +91,16 @@ The following line `try_files $uri =404;` is very important, and often missing i
 
 ```
     fastcgi_pass php:9000;
+```
+
+This is the actual handover to the PHP interpreter. We're using the FastCGI interface for this handover. It is the modern and most performant approach to connect a web server with a backend-interpreter like PHP. The `fastcgi_pass` takes a network address or unix socket to a PHP-FPM process. So this setting depends on your specific setup. If you're using docker, you can just put down the name of your FPM container. If you're running PHP-FPM on the same system. you can use localhost followed by the port number.
+
+
+```
     include fastcgi.conf;
-```
-
-This is the actual handover to the PHP interpreter. The `fastcgi_pass` takes the IP or unix socket to a PHP FPM process. So this settings depends on your specific setup. If you're using docker, you can just put down the name of your FPM container. If you're running PHP FPM on the same system. you can use localhost followed by the port number. Including `fastcgi.conf` will properly set some global PHP variables like `SCRIPT_NAME` and others.
-
-
-```
     fastcgi_split_path_info ^(.+\.php)(/.+)$;
     fastcgi_param PATH_INFO $fastcgi_path_info;
     fastcgi_param SERVER_PORT 8080;
 ```
 
-Including `fasctgi.conf` gave us a good set of default fastcgi parameters. Now there's only three of them, that we need to set manually starting with `fastcgi_split_path_info`. This directive needs to contain a regular expression with two capture groups. The first group will become the `$fastcgi_script_name` variable, and the second capture group will become `$fastcgi_path_info`. We're only interested in the second variable, which we'll use in the next line to set the `PATH_INFO` variable correctly. The last line is only necessary, if your Nginx is running on a different port, than the port that is really exposed (e.g. you run Nginx in a Docker container, where it has an internal Port 80, but the port is mapped to 8080 on the host). 
+Including `fastcgi.conf` will properly set some global PHP variables like `SCRIPT_NAME`, which the PHP process needs. Now there's only three of them, that we need to set manually starting with `fastcgi_split_path_info`. This directive needs to contain a regular expression with two capture groups. The first group will become the `$fastcgi_script_name` variable, and the second capture group will become `$fastcgi_path_info`. We're only interested in the second variable, which we'll use in the next line to set the `PATH_INFO` variable correctly. The last line is only necessary, if your Nginx is running on a different port, than the port that is really exposed to the outside (e.g. you run Nginx in a Docker container, where it has an internal Port 80, but the port is mapped to 8080 on the host). 
