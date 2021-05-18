@@ -75,7 +75,7 @@ This is a very [important directive](http://nginx.org/en/docs/http/ngx_http_core
   }
 ```
 
-This block is extremly important, and probably the most "unique" part about this Nginx config. Without this block, links and images in Kirby will not work properly. Kirby uses a so called "front controller", which means, that all requests to the Kirby site need to go through a single entrance point (which is `index.php`). Kirby will internally forward/handle the requests to the proper place. If you're trying to request a nested site somewhere deep in your content folder (like `photography/trees`), it does not exist on the file system, so the request needs to go to `index.php`. The `try_files` directive tells Nginx what files it should serve, if there is no direct match for the given path. By adding `/index.php$is_args$args` to this list, we make sure that every request gets to the Kirby front controller, if there is no corresponding file on the file system.
+This block is extremly important, and probably the most "unique" part about this Nginx config. Without this block, links and images in Kirby will not work properly. Kirby uses a so called "front controller", which means, that all requests to the Kirby site need to go [through a single entrance point](https://www.nginx.com/resources/wiki/start/topics/tutorials/config_pitfalls/#front-controller-pattern-web-apps) (which is `index.php`). Kirby will internally forward/handle the requests to the proper place. If you're trying to request a nested site somewhere deep in your content folder (like `photography/trees`), it does not exist on the file system, so the request needs to go to `index.php`. The `try_files` directive tells Nginx what files it should serve, if there is no direct match for the given path. By adding `/index.php$is_args$args` to this list, we make sure that every request gets to the Kirby front controller, if there is no corresponding file on the file system.
 
 
 ```
@@ -86,14 +86,14 @@ This block is extremly important, and probably the most "unique" part about this
 This [`location` block](http://nginx.org/en/docs/http/ngx_http_core_module.html#location) configures the communication between Nginx and PHP. The `~*` after the location keyword is a modifier, to make the following regular expression case insensitive (this means, that `.php` and `.PHP` files will both be handled by this block. Let's look at the regular expression `\.php$` in more detail:
 - `\.` the backslash is an escape sequence, so the following character (a period) will be treated as an actual period, and not as a placeholder (which a period normally means)
 - `php$` the dollar sign at the end of php means, that php needs to be at the end of a path (e.g. it will match `/my/folder/index.php` but not `/my/folder/index.php/morestuff`
-The following line `try_files $uri =404;` is very important, and often missing in Nginx tutorials. It makes sure, that only existing files will be interpreted by PHP. If this is missing, PHP will do some crazy stuff to find a file matching this request, which may result in security problems.
+The following line `try_files $uri =404;` is very important, and [often missing in Nginx tutorials](https://www.nginx.com/resources/wiki/start/topics/tutorials/config_pitfalls/#check-if-file-exists). It makes sure, that only existing files will be interpreted by PHP. If this is missing, PHP will do some crazy stuff to find a file matching this request, which may result in security problems.
 
 
 ```
     fastcgi_pass php:9000;
 ```
 
-This is the actual handover to the PHP interpreter. We're using the FastCGI interface for this handover. It is the modern and most performant approach to connect a web server with a backend-interpreter like PHP. The `fastcgi_pass` takes a network address or unix socket to a PHP-FPM process. So this setting depends on your specific setup. If you're using docker, you can just put down the name of your FPM container. If you're running PHP-FPM on the same system. you can use localhost followed by the port number.
+This is the actual [handover to the PHP interpreter](http://nginx.org/en/docs/http/ngx_http_fastcgi_module.html#fastcgi_pass). We're using the FastCGI interface for this handover. It is the modern and most performant approach to connect a web server with a backend-interpreter like PHP. The `fastcgi_pass` takes a network address or unix socket to a PHP-FPM process. So this setting depends on your specific setup. If you're using docker, you can just put down the name of your FPM container. If you're running PHP-FPM on the same system. you can use localhost followed by the port number.
 
 
 ```
