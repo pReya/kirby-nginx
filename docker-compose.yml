@@ -1,0 +1,13 @@
+version: "3"
+services:
+  web:
+    image: nginx:alpine
+    volumes:
+     - ./starterkit:/usr/share/nginx/html
+     - ./default.conf:/etc/nginx/conf.d/default.conf
+    ports:
+     - "8080:80"
+  php:
+    build: .
+    volumes:
+      - ./starterkit:/usr/share/nginx/html
